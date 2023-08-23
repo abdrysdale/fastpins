@@ -3,7 +3,7 @@
 A simple c script that triggers a gpio pio for a specified amount of time after a delay
 
 */
-// Inlcudes python header for python extension
+// Includes python header for python extension
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
@@ -54,28 +54,33 @@ static PyObject *fastpins_pulse(PyObject *self, PyObject *args){
 
 	/* Function inputs:
 		delay_time = the time delay (in microseconds) before triggering the pins
+		delay_time_camera = the time delay (in microseconds) before trigger the camera
 		pulse_time = the time (in microseconds) that the output signal will last
 		laser_pin = the pin number of the laser trigger GPIO pin
 		camera_pin = the pin number of the fluorescence camera GPIO pin
 	*/
 
 	// Defines argument variables
-	float delay_time, pulse_time;
+	float delay_time, delay_time_camera, pulse_time;
 	int  laser_pin, camera_pin;
 
 	// Converts arguments from python to C
-	if (!PyArg_ParseTuple(args,"ffii", &delay_time, &pulse_time, &laser_pin, &camera_pin))
+	if (!PyArg_ParseTuple(args,"fffii", &delay_time, &delay_time_camera, &pulse_time, &laser_pin, &camera_pin))
 	{
 		return NULL;
 	}
 
-
 	// Delays the trigger
 	delayMicroseconds(delay_time);
-
-	// Triggers the pins
-	digitalWrite (camera_pin,HIGH);
+	
+	// Trigger the laser
 	digitalWrite (laser_pin,HIGH);
+	
+	// Delay the camera trigger
+	delayMicroseconds(delay_time_camera);
+
+	// Triggers the camera
+	digitalWrite (camera_pin,HIGH);
 
 	// Leaves the pins active
 	delayMicroseconds(pulse_time);
@@ -92,34 +97,40 @@ static PyObject *fastpins_pulse(PyObject *self, PyObject *args){
 static PyObject *fastpins_edge(PyObject *self, PyObject *args){
 
 	/* Function inputs:
-		delay_time = the time delay (in microseconds) before triggering the pins
+		delay_time = the time delay (in microseconds) before triggering the laser
+		delay_time_camera = the time delay (in microseconds) before trigger the camera
 		laser_pin = the pin number of the laser trigger GPIO pin
 		camera_pin = the pin number of the fluorescence camera GPIO pin
 		syncb_pin = the pin connected to the SYNC-B output (pin should be set up to read)
 	*/
 
 	// Defines argument variables
-	float delay_time;
+	float delay_time, delay_time_camera;
 	int  laser_pin, camera_pin,syncb_pin;
 
 	// Converts arguments from python to C
-	if (!PyArg_ParseTuple(args,"fiii", &delay_time, &laser_pin, &camera_pin, &syncb_pin))
+	if (!PyArg_ParseTuple(args,"ffiii", &delay_time, &delay_time_camera, &laser_pin, &camera_pin, &syncb_pin))
 	{
 		return NULL;
 	}
 
 	// Delays the trigger
 	delayMicroseconds(delay_time);
-
-	// Triggers the pins
-	digitalWrite (camera_pin,HIGH);
+	
+	// Trigger the laser
 	digitalWrite (laser_pin,HIGH);
+
+	// Delay the camera trigger
+	delayMicroseconds(delay_time_camera);
+
+	// Triggers the camera
+	digitalWrite (camera_pin,HIGH);
 
 	// Waits until capture is complete
 	while (digitalRead(syncb_pin) == 1){}
 
 	// Deactivates pins
-	digitalWrite (laser_pin, LOW);
+	digitalWrite (laser_pin,LOW);
 	digitalWrite (camera_pin,LOW);
 
 	Py_RETURN_NONE;
